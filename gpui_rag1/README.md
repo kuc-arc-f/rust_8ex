@@ -49,3 +49,9 @@ cargo run
 ```
 
 ***
+### blog
+
+https://zenn.dev/knaka0209/scraps/f5cfab85f4e1c8
+
+
+***
