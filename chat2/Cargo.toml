@@ -1,0 +1,10 @@
+[package]
+name = "chat2"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+gpui = "0.2"
+gpui-component = "0.4"
+gpui-component-assets = "0.4"
