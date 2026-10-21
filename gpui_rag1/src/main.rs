@@ -7,6 +7,7 @@ use gpui_component::{
 use gpui_component_assets::Assets;
 use serde::{Deserialize, Serialize};
 use std::env;
+use std::time::Duration;
 
 mod model;
 mod mod_chat;
@@ -126,17 +127,14 @@ impl ChatView {
             &input,
             window,
             |this: &mut Self, state, ev: &InputEvent, window, cx| {
-                let runtime = tokio::runtime::Runtime::new().unwrap();
                 if let InputEvent::PressEnter { .. } = ev {
                     let text = state.read(cx).value().to_string();
                     let text = text.trim().to_string();
                     if text.is_empty() {
                         return;
                     }
-                    runtime.block_on(async {
-                        this.send(text, cx).await;
-                        state.update(cx, |s, cx| s.set_value("", window, cx));
-                    });
+                    this.send(text, cx);
+                    state.update(cx, |s, cx| s.set_value("", window, cx));
                 }
             },
         );
@@ -149,27 +147,51 @@ impl ChatView {
         }
     }
 
-    async fn send(&mut self, text: String, cx: &mut Context<'_, Self>) {
+    fn send(&mut self, text: String, cx: &mut Context<'_, Self>) {
         print!("send.text={}", &text);
         self.messages.push(Message { role: Role::User, text: text.clone() });
         // TODO: ここで RAG / LLM を呼び出す。今はダミー応答。
-        let resp = get_vec_search(text.clone()).await;
-        print!("send.resp={:?}", &resp);
-        let mut res2 :  String = "".to_string(); 
-        match resp {
-            Ok(value) => {
-                println!("結果: {}", value);
-                res2 = value;
-            },
-            Err(err) => println!("error: {}", err),
-        }        
         self.messages.push(Message {
             role: Role::Ai,
-            //text: format!("かしこまりました。\n「{text}」についての内容を要約します。"),
-            text: res2,
-        });
+            text: "考え中...".to_string(),
+        });        
         self.scroll.scroll_to_bottom();
         cx.notify();
+        // 重たい処理はバックグラウンドスレッドで実行する。
+        // (メイン/UI スレッドで実行すると画面がフリーズする)
+        let task = cx.background_executor().spawn(async move {
+            // TODO: ここで RAG / LLM を呼び出す。今はダミーとして重い処理を模擬。
+            let runtime = tokio::runtime::Runtime::new().unwrap();
+            let mut res2 :  String = "".to_string(); 
+            runtime.block_on(async {
+                let resp = get_vec_search(text.clone()).await;
+                match resp {
+                    Ok(value) => {
+                        println!("結果: {}", value);
+                        res2 = value;
+                    },
+                    Err(err) => println!("error: {}", err),
+                }       
+            });            
+            return res2;         
+        });
+        // 処理完了後に UI スレッドへ結果を反映
+        cx.spawn(async move |this, cx| {
+            let reply = task.await;
+            println!("reply={}" , reply);
+            let _ = this.update(cx, |this, cx| {
+                // プレースホルダーを実際の応答で差し替え
+                if let Some(m) = this.messages.last_mut() {
+                    if m.role == Role::Ai {
+                        m.text = reply;
+                    }
+                }
+                this.scroll.scroll_to_bottom();
+                cx.notify();
+            });
+        })
+        .detach();        
+
     }
 
     fn render_message(&self, m: &Message) -> Div {
