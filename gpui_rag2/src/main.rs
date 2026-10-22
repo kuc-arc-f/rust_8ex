@@ -10,7 +10,7 @@ use std::env;
 use std::time::Duration;
 
 mod model;
-mod mod_chat;
+mod mod_hclient;
 
 static TABLE_NAME: &'static str = "document";
 
@@ -96,7 +96,7 @@ async fn get_vec_search(query: String) -> Result<String, Box<dyn std::error::Err
     let stat2 = res2.status();
     println!("stat2: {}", stat2);
     let text2 = res2.text().await?;  
-    //println!("text2={}", text2);
+    println!("text2={}", text2);
     // JSON をパース
     let res3 : model::ContetItemRes = serde_json::from_str(&text2)?;
     println!("res3.data:{}", res3.data);
@@ -125,7 +125,7 @@ async fn get_vec_search(query: String) -> Result<String, Box<dyn std::error::Err
     }  
     let send_text = format!("日本語で、回答して欲しい。\n 要約して欲しい。\n\n{}", out_str);
     println!("send_text={}", send_text);
-    ret = mod_chat::chat_post(send_text.clone()).await;
+    ret = mod_hclient::chat_post(send_text.clone()).await?;
     Ok(ret)
 }
 
