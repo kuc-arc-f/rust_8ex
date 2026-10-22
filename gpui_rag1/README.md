@@ -36,7 +36,7 @@ https://github.com/kuc-arc-f/cpp_18ex/tree/main/redis_cl_11
 ```
 PREFIX_KEY=doc:
 OPENROUTER_API_KEY=
-OPENROUTER_MODEL=deepseek/deepseek-v4-flash-0731
+OPENROUTER_MODEL=openai/gpt-6-luna
 ```
 
 ***

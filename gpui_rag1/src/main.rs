@@ -10,7 +10,8 @@ use std::env;
 use std::time::Duration;
 
 mod model;
-mod mod_chat;
+//mod mod_chat;
+mod mod_hclient;
 
 /// 発言者
 #[derive(Clone, Copy, PartialEq)]
@@ -73,7 +74,7 @@ async fn get_vec_search(query: String) -> Result<String, Box<dyn std::error::Err
     }
     let req1 = model::VectorSearchReq {
         prefix: String::from(&prefix_key),
-        limit: 3,
+        limit: 1,
         vector: vec2,
     };
     //print!("req!{:?}", req1);
@@ -112,7 +113,8 @@ async fn get_vec_search(query: String) -> Result<String, Box<dyn std::error::Err
         out_str = format!("user query: {}\n", query);
     }  
     let send_text = format!("日本語で、回答して欲しい。\n 要約して欲しい。\n\n{}", out_str);
-    ret = mod_chat::chat_post(send_text.clone()).await;
+    println!("content={}", &send_text);
+    ret = mod_hclient::chat_post(send_text.clone()).await?;
     Ok(ret)
 }
 
