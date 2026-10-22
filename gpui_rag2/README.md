@@ -4,7 +4,7 @@
 
  date    : 2026/10/20
 
- update :
+ update : 2026/10/22
 
 ***
 
@@ -30,7 +30,7 @@ https://github.com/kuc-arc-f/cpp_18ex/tree/main/vec_cl_11
 * .env
 ```
 OPENROUTER_API_KEY=
-OPENROUTER_MODEL=deepseek/deepseek-v4-flash-0731
+OPENROUTER_MODEL=openai/gpt-6-luna
 ```
 
 ***
